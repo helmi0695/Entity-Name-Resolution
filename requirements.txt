@@ -20,8 +20,11 @@ executing==2.0.1
 filelock==3.13.1
 fonttools==4.45.1
 fsspec==2023.10.0
+gensim==4.3.2
 huggingface-hub==0.19.4
 idna==3.6
+importlib-metadata==6.8.0
+importlib-resources==6.1.1
 ipykernel==6.27.1
 ipython==8.18.1
 jedi==0.19.1
@@ -88,3 +91,5 @@ wasabi==1.1.2
 wcwidth==0.2.12
 weasel==0.3.4
 wordcloud==1.9.2
+xgboost==2.0.2
+zipp==3.17.0
