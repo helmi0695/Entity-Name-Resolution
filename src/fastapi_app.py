@@ -1,57 +1,86 @@
-# Import necessary libraries
-import re
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
 import joblib
+from gensim.models import Word2Vec
+import numpy as np
+import re
+
+# Load the trained Word2Vec model
+word2vec_model = Word2Vec.load("./models/word2vec_model.model")
+
+# Load the trained XGBoost model
+xgb_model = joblib.load("./models/XGBoost_model.joblib")
 
 
-# Sample input data format
-class Item(BaseModel):
-    entity_name_1: str
-    entity_name_2: str
+# Define the preprocessing function
+def preprocess_entity_name(entity_name):
+    # Lowercasing
+    entity_name = entity_name.lower()
+    # Remove punctuation and special characters
+    entity_name = re.sub(r'[^\w\s]', '', entity_name)
 
-    # Helper function for preprocessing the entities
-    def preprocess_entity_name(entity_name):
-        # Lowercasing
-        entity_name = entity_name.lower()
-        # Remove punctuation and special characters
-        entity_name = re.sub(r'[^\w\s]', '', entity_name)
-
-        return entity_name
+    return entity_name
 
 
+# Define a function to average word vectors for a given text
+def average_word_vectors(words, model, vocabulary, num_features):
+    feature_vector = np.zeros((num_features,), dtype="float64")
+    n_words = 0
+    for word in words:
+        if word in vocabulary:
+            n_words += 1
+            feature_vector = np.add(feature_vector, model.wv[word])
+    if n_words:
+        feature_vector = np.divide(feature_vector, n_words)
+    return feature_vector
+
+
+# Function to get average word vectors for new input
+def get_avg_feature_vectors_new_input(input_data, model, num_features):
+    vocabulary = set(model.wv.index_to_key)
+    avg_feature_vectors = [average_word_vectors(tokens, model, vocabulary, num_features) for tokens in input_data]
+    return np.array(avg_feature_vectors)
+
+
+# Function to predict using the trained XGBoost model
+def predict_similarity(entity_1, entity_2, word2vec_model, xgb_model):
+    # Preprocess entities
+    entity_1 = preprocess_entity_name(entity_1)
+    entity_2 = preprocess_entity_name(entity_2)
+
+    # Tokenize the input data
+    input_data = [sentence.split() for sentence in [entity_1 + ' ' + entity_2]]
+
+    # Get average word vectors for the new input
+    input_w2v = get_avg_feature_vectors_new_input(input_data, word2vec_model, 100)
+
+    # Make predictions using the trained XGBoost model
+    predictions = xgb_model.predict(input_w2v)
+
+    return predictions
+
+
+# Pydantic model for request body
+class PredictionInput(BaseModel):
+    entity_1: str
+    entity_2: str
+
+
+# Define the FastAPI app
 app = FastAPI()
 
-# # Define a placeholder for the model
-# model = None
 
-# # Load the pre-trained model
-# model = joblib.load("../models/trained_model.joblib")
-
-# # Load the TF-IDF vectorizer
-# vectorizer = TfidfVectorizer()
-# vectorizer.fit(pd.read_csv("data/features.csv")['processed_entity_names'])
-
-
-# API endpoint to predict entity name similarity
+# Route to handle predictions
 @app.post("/predict")
-async def predict(item: Item):
-    # # Ensure that the model is loaded before making predictions
-    # if model is None:
-    #     raise HTTPException(status_code=500, detail="Model not loaded")
+def predict_similarity_endpoint(data: PredictionInput):
+    try:
+        entity_1 = data.entity_1
+        entity_2 = data.entity_2
 
-    # Preprocess input data
-    processed_entity_name_1 = Item.preprocess_entity_name(entity_name=item.entity_name_1)
-    processed_entity_name_2 = Item.preprocess_entity_name(entity_name=item.entity_name_2)
-    processed_entity_names = processed_entity_name_1 + ' ' + processed_entity_name_2
+        # Make predictions
+        predictions = predict_similarity(entity_1, entity_2, word2vec_model, xgb_model)
 
-    # # Transform the input using the TF-IDF vectorizer
-    # features = vectorizer.transform([processed_entity_names])
+        return {"entity_1": entity_1, "entity_2": entity_2, "prediction": int(predictions[0])}
 
-    # # Make prediction using the loaded model
-    # prediction = model.predict(features)[0]
-
-    # return {"entity_similarity": prediction}
-    return {"entity_similarity": processed_entity_names}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

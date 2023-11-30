@@ -1,5 +1,25 @@
 # ds_challenge_alpas
 
+## Training process and componants:
+
+![Alt text](./data/images/flowchart_full.png)
+This diagram illustrates the following steps:
+
+- Load and preprocess the dataset.
+- Split the dataset into training and testing sets.
+Tokenize and vectorize the text data using Word2Vec.
+- Save the trained Word2Vec model.
+- Train three models and choose the best one (XGBoost in this case).
+- Save the trained XGBoost model.
+- Test the model and generate a classification report.
+- During inference, the FastAPI app loads the Word2Vec and XGBoost models.
+- The FastAPI app receives an HTTP request for prediction.
+- The FastAPI app performs prediction using the loaded models and sends an HTTP response.
+
+Here is the Daiagram for the FastAPI app chart:
+
+![Alt text](./data/images/flowchart_api.png)
+
 ## How to run the code
 
 - Create and activate a virtual environment
@@ -31,12 +51,12 @@
 
        ```json
        {
-           "entity_name_1": "example_entity_1",
-           "entity_name_2": "example_entity_2"
+           "entity_1": "example_entity_1",
+           "entity_2": "example_entity_2"
        }
        ```
 
-       Adjust the values of `entity_name_1` and `entity_name_2`.
+       Adjust the values of `entity_1` and `entity_2`.
 
   7. **Send the Request:**
      - Click on the "Send" button to send the POST request to your FastAPI app.
