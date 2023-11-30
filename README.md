@@ -1,6 +1,6 @@
-# ds_challenge_alpas
+# DS challenge alpas
 
-## Training process and componants:
+## Training process and componants
 
 ![Alt text](./data/images/flowchart_full.png)
 This diagram illustrates the following steps:
@@ -21,6 +21,14 @@ Here is the Daiagram for the FastAPI app chart:
 ![Alt text](./data/images/flowchart_api.png)
 
 ## How to run the code
+
+### For training the models
+
+Please follow the steps provided in the notebook: /notebooks/'model_training_walkthrough.ipynb'
+
+### For the Prediction API
+
+#### Running the API directly using uvicorn
 
 - Create and activate a virtual environment
 - install the requirements.txt file using this command: pip install -r requirements.txt
@@ -63,3 +71,20 @@ Here is the Daiagram for the FastAPI app chart:
 
   8. **View the Response:**
      - Postman will display the response from the FastAPI app, including the predicted entity similarity.
+
+#### Running the Docker image
+
+1. Install Docker
+2. Pull the Docker Image
+
+```bash
+docker pull fastapi-app:latest
+```
+
+3. Run the Docker Container
+
+```bash
+docker run -p 8000:8000 fastapi-app:latest
+```
+
+4. Open Postman and test as described in the previous step using the following URL: <http://localhost:8000/>
