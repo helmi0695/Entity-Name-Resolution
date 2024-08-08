@@ -1,4 +1,4 @@
-# DS challenge alpas
+# Entity Name Resolution
 
 ## Training process and componants
 
